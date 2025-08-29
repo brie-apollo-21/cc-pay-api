@@ -17,12 +17,17 @@ db.connect()
 import { OAuth2Client } from 'google-auth-library'
 const client = new OAuth2Client();
 
-// email
+// email || name
 export const balance = async (req, res, next) => {
     console.log("===== /BALANCE =====")
     console.log(req.body)
     try {
-        const user = await db.oneOrNone("SELECT * FROM users WHERE email='"+req.body.email+"'", [true]);
+        let user = undefined
+        if(req.body.email) {
+            user = await db.oneOrNone("SELECT * FROM users WHERE email='"+req.body.email+"'", [true]);
+        } else if(req.body.name) {
+            user = await db.oneOrNone("SELECT * FROM users WHERE name='"+req.body.name+"'", [true]);
+        }
         console.log(user)
         if(user !== null) {
             res.send(user.balance)
