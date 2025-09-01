@@ -19,7 +19,7 @@ app.listen(port, () => {
 import { balance, pay } from './endpoints.js'
 
 // email
-app.get('/balance', balance)
+app.post('/balance', balance)
 
 // merchant_name, value, id_token
 app.post('/pay', pay)
