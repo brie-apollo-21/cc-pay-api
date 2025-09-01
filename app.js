@@ -16,10 +16,13 @@ app.listen(port, () => {
   console.log(`CC Pay API listening on port ${port}`)
 })
 
-import { balance, pay } from './endpoints.js'
+import { balance, pay, start_session } from './endpoints.js'
 
 // email
 app.post('/balance', balance)
 
 // merchant_name, value, id_token
 app.post('/pay', pay)
+
+// id_token
+app.post('/start_session', start_session)
