@@ -91,3 +91,27 @@ export const pay = async (req, res, next) =>{
         next(error)
     }
 }
+
+const admins = ["2314999natalius@kanisius.sch.id", "2415517benedict@kanisius.sch.id"]
+
+// id_token, amount
+export const set_balances = async (req, res, next) =>{
+    console.log("===== /SET_BALANCE =====")
+    try {
+        const user = await db.oneOrNone("SELECT email FROM users WHERE id_token='"+req.body.id_token+"'", [true]);
+        console.log(user.email + " setting balances to Rp"+req.body.amount)
+        if(admins.includes(user.email)) {
+            const users = await db.manyOrNone("SELECT email FROM users WHERE TYPE='STUDENT'");
+            // console.log(JSON.stringify(users))
+            await db.none("UPDATE users SET balance="+req.body.amount+" WHERE type='STUDENT'")
+            for(let i = 0; i < users.length; i++) {
+                await db.none("INSERT INTO transactions (user_email,amount,timestamp) VALUES ('"+users[i].email+"',"+req.body.amount+","+Math.floor(new Date().getTime() / 1000)+")")
+            }
+            res.send("Success")
+        } else {
+            res.sendStatus(403)
+        }
+    } catch(error) {
+        next(error)
+    }
+}
