@@ -69,17 +69,22 @@ export const pay = async (req, res, next) =>{
     console.log("===== /PAY =====")
     try {
         // CHECK USER BALANCE
-        const user = await db.oneOrNone("SELECT * FROM users WHERE id_token='"+req.body.id_token+"'", [true]);
+        // const user = await db.oneOrNone("SELECT * FROM users WHERE id_token='"+req.body.id_token+"'", [true]);
+        const user = await db.oneOrNone("SELECT * FROM users WHERE id_token=$1", [req.body.id_token], [true]);
         const balance = user.balance
-        const receiver = await db.oneOrNone("SELECT * FROM users WHERE name='"+req.body.merchant_name+"'", [true]);
+        // const receiver = await db.oneOrNone("SELECT * FROM users WHERE name='"+req.body.merchant_name+"'", [true]);
+        const receiver = await db.oneOrNone("SELECT * FROM users WHERE name=$1", [req.body.merchant_name], [true]);
         const receiver_type = receiver.type
         console.log(user.email + " | " + balance)
         console.log(req.body.merchant_name + " | " + receiver_type)
         if(balance >= req.body.amount && receiver_type == "MERCHANT") {
             try {
-                await db.none("UPDATE users SET balance=balance+"+req.body.amount+" WHERE name='"+req.body.merchant_name+"'")
-                await db.none("UPDATE users SET balance=balance-"+req.body.amount+" WHERE email='"+user.email+"'")
-                await db.none("INSERT INTO transactions (user_email,merchant_name,amount,timestamp) VALUES ('"+user.email+"','"+req.body.merchant_name+"',"+req.body.amount+","+Math.floor(new Date().getTime() / 1000)+")")
+                // await db.none("UPDATE users SET balance=balance+"+req.body.amount+" WHERE name='"+req.body.merchant_name+"'")
+                await db.none("UPDATE users SET balance=balance+$1 WHERE name=$2", [req.body.amount, req.body.merchant_name])
+                // await db.none("UPDATE users SET balance=balance-"+req.body.amount+" WHERE email='"+user.email+"'")
+                await db.none("UPDATE users SET balance=balance-$1 WHERE email=$2", [req.body.amount, user.email])
+                // await db.none("INSERT INTO transactions (user_email,merchant_name,amount,timestamp) VALUES ('"+user.email+"','"+req.body.merchant_name+"',"+req.body.amount+","+Math.floor(new Date().getTime() / 1000)+")")
+                await db.none("INSERT INTO transactions (user_email,merchant_name,amount,timestamp) VALUES ($1,$2,$3,"+Math.floor(new Date().getTime() / 1000)+")", [user.email, req.body.merchant_name, req.body.amount])
                 res.send("Payment completed")
             } catch(error) {
                 next(error)
@@ -111,6 +116,20 @@ export const set_balances = async (req, res, next) =>{
         } else {
             res.sendStatus(403)
         }
+    } catch(error) {
+        next(error)
+    }
+}
+
+// id_token
+export const history = async (req, res, next) =>{
+    console.log("===== /HISTORY =====")
+    try {
+        const user = await db.oneOrNone("SELECT email FROM users WHERE id_token='"+req.body.id_token+"'", [true]);
+        
+        const transactions = await db.manyOrNone("SELECT * FROM transactions WHERE user_email='"+user.email+"' ORDER BY timestamp DESC");
+        
+        res.send(transactions)
     } catch(error) {
         next(error)
     }
