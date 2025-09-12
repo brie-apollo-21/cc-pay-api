@@ -54,7 +54,22 @@ export const start_session = async (req, res, next) => {
         console.log(ticket.getPayload())
         const email = ticket.getPayload().email
         try {
-            await db.none("UPDATE users SET id_token='"+req.body.id_token+"' WHERE email='"+email+"'")
+            const user = await db.oneOrNone("SELECT 1 FROM users WHERE email='"+email+"'", [true]);
+            if(user == null) {
+                console.log("New user: "+email)
+                try {
+                    await db.none("INSERT INTO users (email,name,type,balance,id_token) VALUES ($1,$2,'STUDENT',0,$3)", [email, ticket.getPayload().name, req.body.id_token])
+                } catch(error) {
+                    next(error)
+                }
+            } else {
+                console.log("Existing user: "+email)
+                try {
+                    await db.none("UPDATE users SET id_token='"+req.body.id_token+"' WHERE email='"+email+"'")
+                } catch(error) {
+                    next(error)
+                }
+            }
             res.send("Session started")
         } catch(error) {
             next(error)
