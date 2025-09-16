@@ -57,8 +57,12 @@ export const start_session = async (req, res, next) => {
             const user = await db.oneOrNone("SELECT 1 FROM users WHERE email='"+email+"'", [true]);
             if(user == null) {
                 console.log("New user: "+email)
+                let nis = undefined
+                if(email.endsWith("@kanisius.sch.id") == true) {
+                    nis = email.match(/\d+/g)[0]
+                }
                 try {
-                    await db.none("INSERT INTO users (email,name,type,balance,id_token) VALUES ($1,$2,'STUDENT',0,$3)", [email, ticket.getPayload().name, req.body.id_token])
+                    await db.none("INSERT INTO users (email,nis,name,type,balance,id_token) VALUES ($1,$2,$3,'STUDENT',0,$4)", [email, nis, ticket.getPayload().name, req.body.id_token])
                 } catch(error) {
                     next(error)
                 }
