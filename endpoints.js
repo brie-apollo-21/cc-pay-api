@@ -83,6 +83,16 @@ export const start_session = async (req, res, next) => {
     }
 }
 
+// id_token
+export const end_session = async (req, res, next) => {
+    console.log("===== /END_SESSION =====")
+    try {
+        await db.none("UPDATE users SET id_token=NULL WHERE id_token='"+req.body.id_token+"'")
+    } catch(error) {
+        next(error)
+    }
+}
+
 // merchant_name, amount, id_token
 export const pay = async (req, res, next) =>{
     console.log("===== /PAY =====")
