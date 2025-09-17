@@ -106,7 +106,7 @@ export const pay = async (req, res, next) =>{
         const receiver_type = receiver.type
         console.log(user.email + " | " + balance)
         console.log(req.body.merchant_name + " | " + receiver_type)
-        if(balance >= req.body.amount && receiver_type == "MERCHANT") {
+        if(balance >= req.body.amount && balance > 0 && receiver_type == "MERCHANT") {
             try {
                 // await db.none("UPDATE users SET balance=balance+"+req.body.amount+" WHERE name='"+req.body.merchant_name+"'")
                 await db.none("UPDATE users SET balance=balance+$1 WHERE name=$2", [req.body.amount, req.body.merchant_name])
