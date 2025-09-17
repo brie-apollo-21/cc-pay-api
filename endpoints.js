@@ -96,6 +96,7 @@ export const end_session = async (req, res, next) => {
 // merchant_name, amount, id_token
 export const pay = async (req, res, next) =>{
     console.log("===== /PAY =====")
+console.log(req.body)
     try {
         // CHECK USER BALANCE
         // const user = await db.oneOrNone("SELECT * FROM users WHERE id_token='"+req.body.id_token+"'", [true]);
