@@ -175,7 +175,7 @@ export const merchants = async (res, next) =>{
     console.log("===== /MERCHANTS =====")
     try {
         const merchants = await db.manyOrNone("SELECT name FROM users WHERE type='MERCHANT' ORDER BY name ASC");   
-        res.send(merchants)
+        res.send(JSON.stringify(merchants))
     } catch(error) {
         next(error)
     }
