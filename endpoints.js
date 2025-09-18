@@ -121,12 +121,10 @@ console.log(req.body)
                     next(error)
                 }
             } else {
-                res.status(400);
-                res.send("Insufficient funds or negative payment amount")
+                res.status(400).send("Insufficient funds or negative payment amount")
             }
         } else {
-            res.status(400);
-            res.send("Merchant not found")
+            res.status(400).send("Merchant not found")
         }
     } catch(error) {
         next(error)
@@ -150,7 +148,7 @@ export const set_balances = async (req, res, next) =>{
             }
             res.send("Success")
         } else {
-            res.sendStatus(403)
+            res.status(403).send("Forbidden")
         }
     } catch(error) {
         next(error)
@@ -171,12 +169,18 @@ export const history = async (req, res, next) =>{
     }
 }
 
-export const merchants = async (res, next) =>{
+export const merchants = async (req, res) =>{
     console.log("===== /MERCHANTS =====")
     try {
-        const merchants = await db.manyOrNone("SELECT name FROM users WHERE type='MERCHANT' ORDER BY name ASC");   
-        res.send(JSON.stringify(merchants))
+        const merchants = await db.manyOrNone("SELECT name FROM users WHERE type='MERCHANT' ORDER BY name ASC");
+        let merchants_string = "["
+        for(let i = 0; i < merchants.length; i++) {
+            merchants_string += "'" + merchants[i].name + "',"
+        }
+        merchants_string += "]"
+        console.log(merchants_string)
+        res.send(merchants_string)
     } catch(error) {
-        next(error)
+        res.send("Error fetching merchants")
     }
 }
