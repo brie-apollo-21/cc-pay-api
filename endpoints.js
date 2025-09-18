@@ -175,7 +175,7 @@ export const merchants = async (req, res) =>{
         const merchants = await db.manyOrNone("SELECT name FROM users WHERE type='MERCHANT' ORDER BY name ASC");
         let merchants_string = "["
         for(let i = 0; i < merchants.length; i++) {
-            merchants_string += "'" + merchants[i].name + "',"
+            merchants_string += "\"" + merchants[i].name + "\","
         }
         merchants_string = merchants_string.slice(0, merchants_string.length-1) + "]"
         console.log(merchants_string)
