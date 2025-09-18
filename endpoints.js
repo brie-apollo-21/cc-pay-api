@@ -107,20 +107,26 @@ console.log(req.body)
         const receiver_type = receiver.type
         console.log(user.email + " | " + balance)
         console.log(req.body.merchant_name + " | " + receiver_type)
-        if(balance >= req.body.amount && req.body.amount > 0 && receiver_type == "MERCHANT") {
-            try {
-                // await db.none("UPDATE users SET balance=balance+"+req.body.amount+" WHERE name='"+req.body.merchant_name+"'")
-                await db.none("UPDATE users SET balance=balance+$1 WHERE name=$2", [req.body.amount, req.body.merchant_name])
-                // await db.none("UPDATE users SET balance=balance-"+req.body.amount+" WHERE email='"+user.email+"'")
-                await db.none("UPDATE users SET balance=balance-$1 WHERE email=$2", [req.body.amount, user.email])
-                // await db.none("INSERT INTO transactions (user_email,merchant_name,amount,timestamp) VALUES ('"+user.email+"','"+req.body.merchant_name+"',"+req.body.amount+","+Math.floor(new Date().getTime() / 1000)+")")
-                await db.none("INSERT INTO transactions (user_email,merchant_name,amount,timestamp) VALUES ($1,$2,$3,"+Math.floor(new Date().getTime() / 1000)+")", [user.email, req.body.merchant_name, req.body.amount])
-                res.send("Payment completed")
-            } catch(error) {
-                next(error)
+        if(receiver_type == "MERCHANT") {
+            if(balance >= req.body.amount && req.body.amount > 0) {
+                try {
+                    // await db.none("UPDATE users SET balance=balance+"+req.body.amount+" WHERE name='"+req.body.merchant_name+"'")
+                    await db.none("UPDATE users SET balance=balance+$1 WHERE name=$2", [req.body.amount, req.body.merchant_name])
+                    // await db.none("UPDATE users SET balance=balance-"+req.body.amount+" WHERE email='"+user.email+"'")
+                    await db.none("UPDATE users SET balance=balance-$1 WHERE email=$2", [req.body.amount, user.email])
+                    // await db.none("INSERT INTO transactions (user_email,merchant_name,amount,timestamp) VALUES ('"+user.email+"','"+req.body.merchant_name+"',"+req.body.amount+","+Math.floor(new Date().getTime() / 1000)+")")
+                    await db.none("INSERT INTO transactions (user_email,merchant_name,amount,timestamp) VALUES ($1,$2,$3,"+Math.floor(new Date().getTime() / 1000)+")", [user.email, req.body.merchant_name, req.body.amount])
+                    res.send("Payment completed")
+                } catch(error) {
+                    next(error)
+                }
+            } else {
+                res.status(400);
+                res.send("Insufficient funds or negative payment amount")
             }
         } else {
-            res.send("Insufficient funds")
+            res.status(400);
+            res.send("Merchant not found")
         }
     } catch(error) {
         next(error)
