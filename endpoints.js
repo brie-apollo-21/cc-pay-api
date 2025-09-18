@@ -177,7 +177,7 @@ export const merchants = async (req, res) =>{
         for(let i = 0; i < merchants.length; i++) {
             merchants_string += "'" + merchants[i].name + "',"
         }
-        merchants_string += "]"
+        merchants_string = merchants_string.slice(0, merchants_string.length-1) + "]"
         console.log(merchants_string)
         res.send(merchants_string)
     } catch(error) {
