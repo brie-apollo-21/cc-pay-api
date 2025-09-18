@@ -170,3 +170,13 @@ export const history = async (req, res, next) =>{
         next(error)
     }
 }
+
+export const merchants = async (res, next) =>{
+    console.log("===== /MERCHANTS =====")
+    try {
+        const merchants = await db.manyOrNone("SELECT name FROM users WHERE type='MERCHANT' ORDER BY name ASC");   
+        res.send(merchants)
+    } catch(error) {
+        next(error)
+    }
+}
