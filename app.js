@@ -1,7 +1,7 @@
 import express from "express";
 import cors from 'cors';
 import 'dotenv/config'
-// const bodyParser = require('body-parser')
+
 const app = express()
 app.use(cors(), express.json());
 const port = process.env.PORT || 80
@@ -37,3 +37,5 @@ app.post('/set_balances', set_balances)
 app.post('/history', history)
 
 app.get('/merchants', merchants)
+
+app.use(express.static('logs'))
