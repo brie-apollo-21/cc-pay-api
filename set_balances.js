@@ -21,6 +21,9 @@ const amount = args[0]
 const users = await db.manyOrNone("SELECT email FROM users WHERE TYPE='STUDENT'");
 
 await db.none("UPDATE users SET balance="+amount+" WHERE type='STUDENT'")
+let insert_history = ""
 for(let i = 0; i < users.length; i++) {
-    await db.none("INSERT INTO transactions (user_email,amount,timestamp) VALUES ('"+users[i].email+"',"+amount+","+Math.floor(new Date().getTime() / 1000)+")")
+    insert_history += "INSERT INTO transactions (user_email,amount,timestamp) VALUES ('"+users[i].email+"',"+amount+","+Math.floor(new Date().getTime() / 1000)+");"
 }
+await db.none(insert_history)
+process.exit()
