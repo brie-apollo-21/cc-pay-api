@@ -73,7 +73,7 @@ export const start_session = async (req, res, next) => {
             } else {
                 logger.info("Existing user: " + email)
                 try {
-                    await db.none("UPDATE users SET id_token='" + req.body.id_token + "' WHERE email='" + email + "'")
+                    await db.none("UPDATE users SET id_token='" + req.body.id_token + "',name='"+ticket.getPayload().name+"',email='"+email+"' WHERE nis="+nis)
                 } catch (error) {
                     logger.error(error)
                     next(error)
