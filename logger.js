@@ -14,7 +14,7 @@ const logger = winston.createLogger({
             return `[${timestamp}] ${level}: ${message}${Object.keys(metadata)[0] == undefined ? '' : JSON.stringify(metadata)}`;
         })
     ),
-    transports: [new winston.transports.File({ filename: 'logs/all.log' })]
+    transports: [new winston.transports.File({ filename: 'logs/all.log' }), new winston.transports.Console()],
 });
 
 export default logger;
