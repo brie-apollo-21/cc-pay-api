@@ -27,7 +27,7 @@ export const balance = async (req, res, next) => {
         if (req.body.email) {
             user = await db.oneOrNone("SELECT * FROM users WHERE email='" + req.body.email + "'", [true]);
         } else if (req.body.name) {
-            user = await db.oneOrNone("SELECT * FROM users WHERE name='" + req.body.name + "'", [true]);
+            user = await db.oneOrNone("SELECT * FROM users WHERE name=$1", [req.body.name], [true]);
         }
         if (user !== null) {
             logger.info("User: ", user)
@@ -56,14 +56,14 @@ export const start_session = async (req, res, next) => {
         })
         logger.info("Payload: ", ticket.getPayload())
         const email = ticket.getPayload().email
+        let nis = null
+        if (email.endsWith("@kanisius.sch.id") == true) {
+            nis = email.match(/\d+/g)[0]
+        }
         try {
-            const user = await db.oneOrNone("SELECT 1 FROM users WHERE email='" + email + "'", [true]);
+            const user = await db.oneOrNone("SELECT 1 FROM users WHERE nis="+nis, [true]);
             if (user == null) {
                 logger.info("New user: " + email)
-                let nis = undefined
-                if (email.endsWith("@kanisius.sch.id") == true) {
-                    nis = email.match(/\d+/g)[0]
-                }
                 try {
                     await db.none("INSERT INTO users (email,nis,name,type,balance,id_token) VALUES ($1,$2,$3,'STUDENT',0,$4)", [email, nis, ticket.getPayload().name, req.body.id_token])
                 } catch (error) {
