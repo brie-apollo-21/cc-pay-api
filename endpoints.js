@@ -203,12 +203,12 @@ export const history = async (req, res, next) => {
 export const merchants = async (req, res) => {
     logger.info("===== /MERCHANTS =====")
     try {
-        const merchants = await db.manyOrNone("SELECT name FROM users WHERE type='MERCHANT' ORDER BY name ASC");
-        let merchants_string = "["
+        const merchants = await db.manyOrNone("SELECT name, balance FROM users WHERE type='MERCHANT' ORDER BY name ASC");
+        let merchants_string = "{"
         for (let i = 0; i < merchants.length; i++) {
-            merchants_string += "\"" + merchants[i].name + "\","
+            merchants_string += "\"" + merchants[i].name + "\": "+merchants[i].balance+","
         }
-        merchants_string = merchants_string.slice(0, merchants_string.length - 1) + "]"
+        merchants_string = merchants_string.slice(0, merchants_string.length - 1) + "}"
         logger.info(merchants_string)
         res.send(merchants_string)
     } catch (error) {
