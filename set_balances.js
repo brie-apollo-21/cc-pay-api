@@ -30,28 +30,33 @@ const jadwal_konsumsi = {
 const args = process.argv.slice(2)
 const amount = args[0]
 
-let where_query = " WHERE"
-const date_string = new Date(Date.now() - ((new Date()).getTimezoneOffset() * 60000)).toISOString().slice(0,10)
-console.log(date_string)
-for(let i = 0; i < jadwal_konsumsi["koorbid"].length; i++) {
-    where_query += " nis="+jadwal_konsumsi["koorbid"][i]+" OR"
+if(amount == 0 && new Date().getHours() >= 17) {
+    await db.none("UPDATE users SET balance=0 WHERE type='STUDENT';");
+} else {
+    let where_query = " WHERE"
+    const date_string = new Date(Date.now() - ((new Date()).getTimezoneOffset() * 60000)).toISOString().slice(0,10)
+    console.log(date_string)
+    for(let i = 0; i < jadwal_konsumsi["koorbid"].length; i++) {
+        where_query += " nis="+jadwal_konsumsi["koorbid"][i]+" OR"
+    }
+    for(let i = 0; i < jadwal_konsumsi[date_string].length; i++) {
+        where_query += " nis="+jadwal_konsumsi[date_string][i]+" OR"
+    }
+    where_query = where_query.slice(0, -3) + ";"
+
+    const users = await db.manyOrNone("SELECT email FROM users"+where_query);
+    console.log("SELECT email FROM users"+where_query)
+
+    let update_query = "UPDATE users SET balance="+amount+where_query
+    console.log(update_query)
+
+    await db.none(update_query)
+
+    let insert_history = ""
+    for(let i = 0; i < users.length; i++) {
+        insert_history += "INSERT INTO transactions (user_email,amount,timestamp) VALUES ('"+users[i].email+"',"+amount+","+Math.floor(new Date().getTime() / 1000)+");"
+    }
+    await db.none(insert_history)
 }
-for(let i = 0; i < jadwal_konsumsi[date_string].length; i++) {
-    where_query += " nis="+jadwal_konsumsi[date_string][i]+" OR"
-}
-where_query = where_query.slice(0, -3) + ";"
 
-const users = await db.manyOrNone("SELECT email FROM users"+where_query);
-console.log("SELECT email FROM users"+where_query)
-
-let update_query = "UPDATE users SET balance="+amount+where_query
-console.log(update_query)
-
-await db.none(update_query)
-
-let insert_history = ""
-for(let i = 0; i < users.length; i++) {
-    insert_history += "INSERT INTO transactions (user_email,amount,timestamp) VALUES ('"+users[i].email+"',"+amount+","+Math.floor(new Date().getTime() / 1000)+");"
-}
-await db.none(insert_history)
 process.exit()
