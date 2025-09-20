@@ -32,6 +32,13 @@ const amount = args[0]
 
 if(amount == 0 && new Date().getHours() >= 17) {
     await db.none("UPDATE users SET balance=0 WHERE type='STUDENT';");
+
+    const users = await db.manyOrNone("SELECT email FROM users WHERE TYPE='STUDENT'");
+    let insert_history = ""
+    for(let i = 0; i < users.length; i++) {
+        insert_history += "INSERT INTO transactions (user_email,amount,timestamp) VALUES ('"+users[i].email+"',"+amount+","+Math.floor(new Date().getTime() / 1000)+");"
+    }
+    await db.none(insert_history)
 } else {
     let where_query = " WHERE"
     const date_string = new Date(Date.now() - ((new Date()).getTimezoneOffset() * 60000)).toISOString().slice(0,10)
