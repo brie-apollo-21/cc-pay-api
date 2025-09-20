@@ -170,15 +170,21 @@ export const set_balances = async (req, res, next) => {
     }
 }
 
-// id_token
+// id_token, name
 export const history = async (req, res, next) => {
     logger.info("===== /HISTORY =====")
     try {
-        const user = await db.oneOrNone("SELECT email FROM users WHERE id_token='" + req.body.id_token + "'", [true]);
+        if(req.body.name){
+            const transactions = await db.manyOrNone("SELECT * FROM transactions WHERE merchant_name=$1 ORDER BY timestamp DESC", [req.body.name]);
+            
+            res.send(transactions)
+        } else {
+            const user = await db.oneOrNone("SELECT email FROM users WHERE id_token='" + req.body.id_token + "'", [true]);
 
-        const transactions = await db.manyOrNone("SELECT * FROM transactions WHERE user_email='" + user.email + "' ORDER BY timestamp DESC");
+            const transactions = await db.manyOrNone("SELECT * FROM transactions WHERE user_email='" + user.email + "' ORDER BY timestamp DESC");
 
-        res.send(transactions)
+            res.send(transactions)
+        }
     } catch (error) {
         logger.error(error)
         next(error)
