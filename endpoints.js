@@ -1,6 +1,6 @@
 import pgPromise from 'pg-promise'
 import 'dotenv/config'
-import logger from './logger.js';
+import { logger, clientLogger } from './logger.js';
 
 const pgp = pgPromise()
 const db = pgp({
@@ -204,5 +204,14 @@ export const merchants = async (req, res) => {
         res.send(merchants_string)
     } catch (error) {
         res.send("Error fetching merchants")
+    }
+}
+
+export const log = async (req, res) => {
+    try {
+        clientLogger.info(req.body.message)
+        res.send("Logged")
+    } catch (error) {
+        res.send("Error")
     }
 }

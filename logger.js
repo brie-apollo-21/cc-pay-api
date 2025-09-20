@@ -5,7 +5,7 @@ const customJsonFormat = printf(info => {
     return `[${info.timestamp}] ${info.level}: ${JSON.stringify(info.message)}`;
 });
 
-const logger = winston.createLogger({
+export const logger = winston.createLogger({
     format: combine(
         timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         splat(),
@@ -17,4 +17,14 @@ const logger = winston.createLogger({
     transports: [new winston.transports.File({ filename: 'logs/all.log' }), new winston.transports.Console()],
 });
 
-export default logger;
+export const clientLogger = winston.createLogger({
+    format: combine(
+        timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        splat(),
+        align(),
+        printf(({level, message, timestamp, ...metadata}) => {
+            return `[${timestamp}] ${message}${Object.keys(metadata)[0] == undefined ? '' : JSON.stringify(metadata)}`;
+        })
+    ),
+    transports: [new winston.transports.File({ filename: 'logs/client.log' }), new winston.transports.Console()],
+});
