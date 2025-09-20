@@ -150,13 +150,14 @@ const admins = ["2314999natalius@kanisius.sch.id", "2415517benedict@kanisius.sch
 // id_token, amount, [nis]
 export const set_balances = async (req, res, next) => {
     logger.info("===== /SET_BALANCES =====")
+    const nis = JSON.parse(req.body.nis)
     try {
         const user = await db.oneOrNone("SELECT email FROM users WHERE id_token='" + req.body.id_token + "'", [true]);
         if (admins.includes(user.email)) {
             logger.info("Admin " + user.email + " setting balances to " + req.body.amount)
             let query = "UPDATE users SET balance="+req.body.amount+" WHERE"
-            for(let i = 0; i < req.body.nis.length; i++){
-                query += " nis=" + req.body.nis[i] + " OR"
+            for(let i = 0; i < nis.length; i++){
+                query += " nis=" + nis[i] + " OR"
             }
             query = query.slice(0, -3) + ";"
             try {
