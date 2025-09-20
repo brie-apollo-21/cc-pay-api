@@ -147,21 +147,28 @@ export const pay = async (req, res, next) => {
 
 const admins = ["2314999natalius@kanisius.sch.id", "2415517benedict@kanisius.sch.id"]
 
-// id_token, amount
+// id_token, amount, [nis]
 export const set_balances = async (req, res, next) => {
-    logger.info("===== /SET_BALANCE =====")
+    logger.info("===== /SET_BALANCES =====")
     try {
         const user = await db.oneOrNone("SELECT email FROM users WHERE id_token='" + req.body.id_token + "'", [true]);
-        logger.info(user.email + " setting balances to Rp" + req.body.amount)
         if (admins.includes(user.email)) {
-            const users = await db.manyOrNone("SELECT email FROM users WHERE TYPE='STUDENT'");
-            // logger.info(JSON.stringify(users))
-            await db.none("UPDATE users SET balance=" + req.body.amount + " WHERE type='STUDENT'")
-            for (let i = 0; i < users.length; i++) {
-                await db.none("INSERT INTO transactions (user_email,amount,timestamp) VALUES ('" + users[i].email + "'," + req.body.amount + "," + Math.floor(new Date().getTime() / 1000) + ")")
+            logger.info("Admin " + user.email + " setting balances to " + req.body.amount)
+            let query = "UPDATE users SET balance="+req.body.amount+" WHERE"
+            for(let i = 0; i < req.body.nis.length; i++){
+                query += " nis=" + req.body.nis[i] + " OR"
             }
-            res.send("Success")
+            query = query.slice(0, -3) + ";"
+            try {
+                await db.none(query)
+                logger.info("Success")
+                res.send("Success")
+            } catch (error) {
+                logger.error(error)
+                next(error)
+            }
         } else {
+            logger.info("Forbidden")
             res.status(403).send("Forbidden")
         }
     } catch (error) {
