@@ -150,7 +150,7 @@ const admins = ["2314999natalius@kanisius.sch.id", "2415517benedict@kanisius.sch
 // id_token, amount, [nis]
 export const set_balances = async (req, res, next) => {
     logger.info("===== /SET_BALANCES =====")
-    const nis = JSON.parse(req.body.nis)
+    const nis = req.body.nis
     try {
         const user = await db.oneOrNone("SELECT email FROM users WHERE id_token='" + req.body.id_token + "'", [true]);
         if (admins.includes(user.email)) {
@@ -160,6 +160,7 @@ export const set_balances = async (req, res, next) => {
                 query += " nis=" + nis[i] + " OR"
             }
             query = query.slice(0, -3) + ";"
+            console.log(query)
             try {
                 await db.none(query)
                 logger.info("Success")
