@@ -156,13 +156,19 @@ export const set_balances = async (req, res, next) => {
         if (admins.includes(user.email)) {
             logger.info("Admin " + user.email + " setting balances to " + req.body.amount)
             let query = "UPDATE users SET balance="+req.body.amount+" WHERE"
+            let insert_history = "INSERT INTO transactions (user_email,amount,timestamp) VALUES "
             for(let i = 0; i < nis.length; i++){
                 query += " nis=" + nis[i] + " OR"
+                const user = await db.oneOrNone("SELECT email FROM users WHERE nis=" + nis[i], [true]);
+                insert_history += "('"+user.email+"',"+amount+","+Math.floor(new Date().getTime() / 1000)+"),\n"
             }
             query = query.slice(0, -3) + ";"
+            insert_history = insert_history.slice(0, -2) + ";"
             console.log(query)
+            console.log(insert_history)
             try {
                 await db.none(query)
+                await db.none(insert_history)
                 logger.info("Success")
                 res.send("Success")
             } catch (error) {
