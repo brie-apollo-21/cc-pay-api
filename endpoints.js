@@ -160,10 +160,11 @@ export const set_balances = async (req, res, next) => {
                 where_query += " nis="+nis[i]+" OR"
             }
             where_query = where_query.slice(0, -3) + ";"
+            console.log(where_query)
 
             const users = await db.manyOrNone("SELECT email FROM users"+where_query);
 
-            let update_query = "UPDATE users SET balance="+amount+where_query
+            let update_query = "UPDATE users SET balance="+req.body.amount+where_query
 
             let insert_history = ""
             for(let i = 0; i < users.length; i++) {
@@ -173,6 +174,7 @@ export const set_balances = async (req, res, next) => {
             try {
                 await db.none(update_query)
                 await db.none(insert_history)
+                res.send("Success")
             } catch (error) {
                 logger.error(error)
                 next(error)
