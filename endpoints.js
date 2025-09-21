@@ -155,22 +155,24 @@ export const set_balances = async (req, res, next) => {
         const user = await db.oneOrNone("SELECT email FROM users WHERE id_token='" + req.body.id_token + "'", [true]);
         if (admins.includes(user.email)) {
             logger.info("Admin " + user.email + " setting balances to " + req.body.amount)
-            let query = "UPDATE users SET balance="+req.body.amount+" WHERE"
-            let insert_history = "INSERT INTO transactions (user_email,amount,timestamp) VALUES "
-            for(let i = 0; i < nis.length; i++){
-                query += " nis=" + nis[i] + " OR"
-                const user = await db.oneOrNone("SELECT email FROM users WHERE nis=" + nis[i], [true]);
-                insert_history += "('"+user.email+"',"+amount+","+Math.floor(new Date().getTime() / 1000)+"),\n"
+            let where_query = " WHERE"
+            for(let i = 0; i < nis.length; i++) {
+                where_query += " nis="+nis[i]+" OR"
             }
-            query = query.slice(0, -3) + ";"
-            insert_history = insert_history.slice(0, -2) + ";"
-            console.log(query)
-            console.log(insert_history)
+            where_query = where_query.slice(0, -3) + ";"
+
+            const users = await db.manyOrNone("SELECT email FROM users"+where_query);
+
+            let update_query = "UPDATE users SET balance="+amount+where_query
+
+            let insert_history = ""
+            for(let i = 0; i < users.length; i++) {
+                insert_history += "INSERT INTO transactions (user_email,amount,timestamp) VALUES ('"+users[i].email+"',"+req.body.amount+","+Math.floor(new Date().getTime() / 1000)+");"
+            }
+
             try {
-                await db.none(query)
+                await db.none(update_query)
                 await db.none(insert_history)
-                logger.info("Success")
-                res.send("Success")
             } catch (error) {
                 logger.error(error)
                 next(error)
