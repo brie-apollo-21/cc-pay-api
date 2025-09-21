@@ -145,7 +145,7 @@ export const pay = async (req, res, next) => {
     }
 }
 
-const admins = ["2314999natalius@kanisius.sch.id", "2415517benedict@kanisius.sch.id"]
+const admins = ["2314999natalius@kanisius.sch.id", "2415517benedict@kanisius.sch.id", "2314924nathan@kanisius.sch.id"]
 
 // id_token, amount, [nis]
 export const set_balances = async (req, res, next) => {
