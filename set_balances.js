@@ -354,42 +354,58 @@ const jadwal_konsumsi = {
 
 // amount
 const args = process.argv.slice(2)
-const amount = args[0]
+const amount = parseInt(args[0], 10)
 
-if(amount == 0) {
-    await db.none("UPDATE users SET balance=0 WHERE type='STUDENT';");
+if (amount === 0) {
+    await db.none("UPDATE users SET balance=0 WHERE type='STUDENT';")
 
-    const users = await db.manyOrNone("SELECT email FROM users WHERE TYPE='STUDENT'");
-    let insert_history = ""
-    for(let i = 0; i < users.length; i++) {
-        insert_history += "INSERT INTO transactions (user_email,amount,timestamp) VALUES ('"+users[i].email+"',"+amount+","+Math.floor(new Date().getTime() / 1000)+");"
+    const users = await db.manyOrNone("SELECT email FROM users WHERE type='STUDENT'")
+    const now = Math.floor(Date.now() / 1000)
+
+    const insert_history = users.map(
+        u => `INSERT INTO transactions (user_email, amount, timestamp) VALUES ('${u.email}', ${amount}, ${now});`
+    ).join("")
+
+    if (insert_history) {
+        await db.none(insert_history)
     }
-    await db.none(insert_history)
 } else {
-    let where_query = " WHERE"
-    const date_string = new Date(Date.now() - ((new Date()).getTimezoneOffset() * 60000)).toISOString().slice(0,10)
+    const date_string = new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 10)
+
     console.log(date_string)
-    for(let i = 0; i < jadwal_konsumsi["koorbid"].length; i++) {
-        where_query += " nis="+jadwal_konsumsi["koorbid"][i]+" OR"
-    }
-    for(let i = 0; i < jadwal_konsumsi[date_string].length; i++) {
-        where_query += " nis="+jadwal_konsumsi[date_string][i]+" OR"
-    }
-    where_query = where_query.slice(0, -3) + ";"
 
-    const users = await db.manyOrNone("SELECT email FROM users"+where_query);
-    console.log("SELECT email FROM users"+where_query)
+    // collect all nis values in one array
+    const nis_list = [
+        ...jadwal_konsumsi["koorbid"],
+        ...jadwal_konsumsi[date_string]
+    ]
 
-    let update_query = "UPDATE users SET balance="+amount+where_query
+    if (nis_list.length === 0) {
+        console.log("No NIS found for update")
+        process.exit()
+    }
+
+    // build WHERE using IN (...)
+    const where_query = ` WHERE nis IN (${nis_list.join(",")})`
+
+    const users = await db.manyOrNone("SELECT email FROM users" + where_query)
+    console.log("SELECT email FROM users" + where_query)
+
+    const update_query = `UPDATE users SET balance=${amount}${where_query}`
     console.log(update_query)
 
     await db.none(update_query)
 
-    let insert_history = ""
-    for(let i = 0; i < users.length; i++) {
-        insert_history += "INSERT INTO transactions (user_email,amount,timestamp) VALUES ('"+users[i].email+"',"+amount+","+Math.floor(new Date().getTime() / 1000)+");"
+    const now = Math.floor(Date.now() / 1000)
+    const insert_history = users.map(
+        u => `INSERT INTO transactions (user_email, amount, timestamp) VALUES ('${u.email}', ${amount}, ${now});`
+    ).join("")
+
+    if (insert_history) {
+        await db.none(insert_history)
     }
-    await db.none(insert_history)
 }
 
 process.exit()
