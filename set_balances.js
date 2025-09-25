@@ -352,42 +352,36 @@ const jadwal_konsumsi = {
     ]))]
 };
 
-// amount
 const args = process.argv.slice(2)
 const amount = parseInt(args[0], 10)
 
 if (amount === 0) {
-    await db.none("UPDATE users SET balance=0 WHERE type='STUDENT';")
+    await db.none("UPDATE users SET balance=0 WHERE type='STUDENT'")
 
     const users = await db.manyOrNone("SELECT email FROM users WHERE type='STUDENT'")
     const now = Math.floor(Date.now() / 1000)
 
     const insert_history = users.map(
-        u => `INSERT INTO transactions (user_email, amount, timestamp) VALUES ('${u.email}', ${amount}, ${now});`
+        u => `INSERT INTO transactions (user_email,amount,timestamp) VALUES ('${u.email}',${amount},${now});`
     ).join("")
 
-    if (insert_history) {
-        await db.none(insert_history)
-    }
+    if (insert_history) await db.none(insert_history)
 } else {
     const date_string = new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 10)
+        .toISOString().slice(0, 10)
 
-    console.log(date_string)
-
-    // collect all nis values in one array
+    // flatten nis lists
     const nis_list = [
         ...jadwal_konsumsi["koorbid"],
         ...jadwal_konsumsi[date_string]
-    ]
+    ].flat()
 
     if (nis_list.length === 0) {
         console.log("No NIS found for update")
         process.exit()
     }
 
-    // build WHERE using IN (...)
+    // build WHERE with IN
     const where_query = ` WHERE nis IN (${nis_list.join(",")})`
 
     const users = await db.manyOrNone("SELECT email FROM users" + where_query)
@@ -400,12 +394,10 @@ if (amount === 0) {
 
     const now = Math.floor(Date.now() / 1000)
     const insert_history = users.map(
-        u => `INSERT INTO transactions (user_email, amount, timestamp) VALUES ('${u.email}', ${amount}, ${now});`
+        u => `INSERT INTO transactions (user_email,amount,timestamp) VALUES ('${u.email}',${amount},${now});`
     ).join("")
 
-    if (insert_history) {
-        await db.none(insert_history)
-    }
+    if (insert_history) await db.none(insert_history)
 }
 
 process.exit()
